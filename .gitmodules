@@ -1,0 +1,3 @@
+[submodule "deps/wavelib"]
+	path = deps/wavelib
+	url = https://github.com/sepehr-laal/wavelib.git
