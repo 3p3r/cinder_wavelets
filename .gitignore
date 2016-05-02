@@ -26,3 +26,10 @@
 *.exe
 *.out
 *.app
+
+# VS generated files
+/vc2013/*
+!/vc2013/Resources.rc
+!/vc2013/CinderScalogram.sln
+!/vc2013/CinderScalogram.vcxproj
+!/vc2013/CinderScalogram.vcxproj.filters
