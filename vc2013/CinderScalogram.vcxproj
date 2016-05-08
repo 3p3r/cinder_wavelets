@@ -114,8 +114,13 @@
   <ItemGroup />
   <ItemGroup>
     <ClCompile Include="..\src\CinderScalogramApp.cpp" />
+    <ClCompile Include="..\src\DwtDsp.cpp" />
+    <ClCompile Include="..\src\DwtNode.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\DftNode.h" />
+    <ClInclude Include="..\include\DwtDsp.h" />
+    <ClInclude Include="..\include\DwtNode.h" />
     <ClInclude Include="..\include\Resources.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
