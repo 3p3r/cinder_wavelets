@@ -15,7 +15,6 @@ using namespace std;
 class CinderScalogramApp : public App {
 public:
     void setup() override;
-    void update() override;
     void draw() override;
     void resize() override;
 
@@ -58,11 +57,6 @@ void CinderScalogramApp::resize()
     auto margin = 40.0f;
     mDftPlot.setBounds(Rectf(margin, margin, getWindowWidth() - margin, (getWindowHeight() - margin) * 0.5f));
     mDwtPlot.setBounds(Rectf(margin, (getWindowHeight() + margin) * 0.5f, getWindowWidth() - margin, getWindowHeight() - margin));
-}
-
-void CinderScalogramApp::update()
-{
-    
 }
 
 void CinderScalogramApp::draw()
