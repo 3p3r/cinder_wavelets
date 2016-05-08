@@ -14,16 +14,21 @@ using namespace std;
 
 class CinderScalogramApp : public App {
 public:
-    void setup() override;
-    void draw() override;
-    void resize() override;
+    void                        setup() override;
+    void                        update() override;
+    void                        draw() override;
+    void                        resize() override;
+    void                        keyDown(KeyEvent event) override;
 
 private:
     audio::InputDeviceNodeRef	mInputDeviceNode;
+    audio::MonitorNodeRef       mMonitorNode;
     wavy::DftNodeRef	        mDftNode;
     wavy::DwtNodeRef	        mDwtNode;
+    WaveformPlot                mWaveForm;
     SpectrumPlot				mDftPlot;
     SpectrumPlot				mDwtPlot;
+    bool                        mDrawWaveForm = false;
 };
 
 void CinderScalogramApp::setup()
@@ -45,11 +50,23 @@ void CinderScalogramApp::setup()
 
     mDwtNode = ctx->makeNode(new wavy::DwtNode(dwtFormat));
 
+    auto monitorFormat = audio::MonitorNode::Format()
+        .windowSize(1024);
+
+    mMonitorNode = ctx->makeNode(new audio::MonitorNode(monitorFormat));
+
     mInputDeviceNode >> mDftNode;
     mInputDeviceNode >> mDwtNode;
+    mInputDeviceNode >> mMonitorNode;
 
     mInputDeviceNode->enable();
     ctx->enable();
+}
+
+void CinderScalogramApp::update()
+{
+    if (mDrawWaveForm)
+        mWaveForm.load(mMonitorNode->getBuffer(), getWindowBounds());
 }
 
 void CinderScalogramApp::resize()
@@ -59,12 +76,21 @@ void CinderScalogramApp::resize()
     mDwtPlot.setBounds(Rectf(margin, (getWindowHeight() + margin) * 0.5f, getWindowWidth() - margin, getWindowHeight() - margin));
 }
 
+void CinderScalogramApp::keyDown(KeyEvent event)
+{
+    if (event.getChar() == 'w' || event.getChar() == 'W')
+        mDrawWaveForm = !mDrawWaveForm;
+}
+
 void CinderScalogramApp::draw()
 {
     gl::clear(Color::black());
 
     mDwtPlot.draw(mDwtNode->getCoefficients());
     mDftPlot.draw(mDftNode->getMagSpectrum());
+    
+    if (mDrawWaveForm)
+        mWaveForm.draw();
 }
 
 CINDER_APP(CinderScalogramApp, RendererGl)
