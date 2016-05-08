@@ -9,8 +9,8 @@ public:
     ScopedWaveObject(dsp::MotherWavelet w)
         : mWaveObj(wave_init(const_cast<char*>(dsp::WavelettoString(w).c_str()))) {}
 
-    ~ScopedWaveObject() { wave_free(mWaveObj); }
-    wave_object getWaveObject() const { return mWaveObj; }
+    ~ScopedWaveObject()                 { wave_free(mWaveObj); }
+    wave_object                         getWaveObject() const { return mWaveObj; }
 
 private:
     wave_object mWaveObj;
@@ -19,9 +19,9 @@ private:
 class ScopedWtObject
 {
 public:
-    ScopedWtObject()                            = delete;
-    explicit ScopedWtObject(ScopedWaveObject&& obj, int num_samples, int decomp_levels)
-        : mWaveObject(obj), mNumSamples(num_samples), mDecompLevels(decomp_levels)
+    ScopedWtObject()                    = delete;
+    explicit ScopedWtObject(dsp::MotherWavelet wavelet, int num_samples, int decomp_levels)
+        : mWaveObject(wavelet), mNumSamples(num_samples), mDecompLevels(decomp_levels)
     {
         mWtObject = wt_init(mWaveObject.getWaveObject(), "dwt", mNumSamples, mDecompLevels);
         setDWTExtension(getWtObject(), "sym");
@@ -30,6 +30,7 @@ public:
 
     ~ScopedWtObject()   { wt_free(mWtObject); }
     wt_object           getWtObject() const { return mWtObject; }
+    wave_object         getWaveObject() const { return mWaveObject.getWaveObject(); }
 
 private:
     ScopedWaveObject    mWaveObject;
@@ -45,11 +46,11 @@ namespace wavy
 
 struct DwtNode::Data
 {
-    Data()              = delete;
-    Data(const Data&)   = delete;
+    Data()                              = delete;
+    Data(const Data&)                   = delete;
     explicit Data(const DwtNode::Format& fmt)
         : mWtObject(
-            ScopedWaveObject(fmt.getMotherWavelet()),
+            fmt.getMotherWavelet(),
             fmt.getWindowSize(),
             fmt.getDecompositionLevels())
     { /* no-op */ }
@@ -60,14 +61,36 @@ struct DwtNode::Data
 DwtNode::DwtNode(const Format &format /*= Format()*/)
     : mCurrentFormat(format)
     , mWavelibData(std::make_unique<Data>(format))
-{
-
-}
+{}
 
 void DwtNode::initialize()
 {
     MonitorNode::initialize();
-    mCoefficients.reserve(mCurrentFormat.getWindowSize());
+    mCoefficients.resize(mCurrentFormat.getWindowSize());
+    mSamplesBuffer = ci::audio::BufferT<double>(mCurrentFormat.getWindowSize());
+}
+
+const std::vector<float>& DwtNode::getCoefficients()
+{
+    fillCopiedBuffer();
+    mSamplesBuffer.zero();
+
+    double scale = 1.0f / getNumChannels();
+    for (std::size_t ch = 0; ch < getNumChannels(); ch++) {
+        for (std::size_t i = 0; i < mWindowSize; i++)
+            mSamplesBuffer[i] += mCopiedBuffer.getChannel(ch)[i] * scale;
+    }
+
+    dwt(mWavelibData->mWtObject.getWtObject(), mSamplesBuffer.getData());
+
+    const float magScale = 1.0f / mCurrentFormat.getWindowSize();
+    for (std::size_t i = 0; i < mWindowSize; i++)
+    {
+        mCoefficients[i] = mCoefficients[i] * 0.5f + magScale * 0.5f;
+        mCoefficients[i] = static_cast<float>(mWavelibData->mWtObject.getWtObject()->output[i]);
+    }
+
+    return mCoefficients;
 }
 
 }
