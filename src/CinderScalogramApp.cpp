@@ -34,24 +34,25 @@ private:
 void CinderScalogramApp::setup()
 {
     auto ctx = audio::Context::master();
+    auto sample_size = 512;
 
     mInputDeviceNode = ctx->createInputDeviceNode();
 
     auto dftFormat = wavy::DftNode::Format()
-        .fftSize(2048)
-        .windowSize(1024);
+        .fftSize(sample_size * 2)
+        .windowSize(sample_size);
 
     mDftNode = ctx->makeNode(new wavy::DftNode(dftFormat));
 
     auto dwtFormat = wavy::DwtNode::Format()
         .decompositionLevels(5)
         .motherWavelet(dsp::MotherWavelet::Daubechies5)
-        .windowSize(1024);
+        .windowSize(sample_size);
 
     mDwtNode = ctx->makeNode(new wavy::DwtNode(dwtFormat));
 
     auto monitorFormat = audio::MonitorNode::Format()
-        .windowSize(1024);
+        .windowSize(sample_size);
 
     mMonitorNode = ctx->makeNode(new audio::MonitorNode(monitorFormat));
 
