@@ -1,6 +1,8 @@
 #include "DwtNode.h"
 #include "wavelib.h"
 
+#include "cinder/CinderMath.h"
+
 namespace {
 
 class ScopedWaveObject
@@ -66,10 +68,24 @@ DwtNode::DwtNode(const Format &format /*= Format()*/)
 void DwtNode::initialize()
 {
     MonitorNode::initialize();
+
     mSamplesBuffer = ci::audio::BufferT<double>(mCurrentFormat.getWindowSize());
+    mSamplesBuffer.zero();
+
+    // we perform the first pass to obtain length of Detail coefficients
+    ::dwt(mWavelibData->mWtObject.getWtObject(), mSamplesBuffer.getData());
+
+    mDetailCoefficients.resize(mCurrentFormat.getDecompositionLevels());
+
+    // According to docs, we exclude the first and last element of lenlength (approx and input length)
+    if (mCurrentFormat.getDecompositionLevels() != mWavelibData->mWtObject.getWtObject()->lenlength - 2)
+        throw std::runtime_error("Invalid decomposition level found.");
+
+    for (int detail = 1; detail < mWavelibData->mWtObject.getWtObject()->lenlength - 1; ++detail)
+        mDetailCoefficients[detail - 1].resize(mWavelibData->mWtObject.getWtObject()->length[detail]);
 }
 
-const std::vector<float>& DwtNode::getCoefficients()
+const std::vector<float>& DwtNode::getCoefficients(int lvl)
 {
     fillCopiedBuffer();
     mSamplesBuffer.zero();
@@ -82,13 +98,25 @@ const std::vector<float>& DwtNode::getCoefficients()
 
     ::dwt(mWavelibData->mWtObject.getWtObject(), mSamplesBuffer.getData());
 
-    if (mCoefficients.size() != mWavelibData->mWtObject.getWtObject()->outlength)
-        mCoefficients.resize(mWavelibData->mWtObject.getWtObject()->outlength);
+    for (int detail_level = mCurrentFormat.getDecompositionLevels(); detail_level > 0; --detail_level)
+    {
+        int offset = 0;
+        for (int lvl = mCurrentFormat.getDecompositionLevels(); lvl >= detail_level; --lvl)
+            offset += mDetailCoefficients[lvl - 1].size();
 
-    for (std::size_t i = 0; i < mCoefficients.size(); i++)
-        mCoefficients[i] = static_cast<float>(mWavelibData->mWtObject.getWtObject()->output[i]);
+        for (std::size_t coeff_index = 0; coeff_index < mDetailCoefficients[detail_level - 1].size(); ++coeff_index)
+        {
+            int output_index = mWavelibData->mWtObject.getWtObject()->outlength - offset + coeff_index;
+            mDetailCoefficients[detail_level - 1][coeff_index] = static_cast<float>(mWavelibData->mWtObject.getWtObject()->output[output_index]);
+        }
+    }
 
-    return mCoefficients;
+    return mDetailCoefficients[ci::math<int>::clamp(lvl, 1, mCurrentFormat.getDecompositionLevels()) - 1];
+}
+
+const std::vector<float>& DwtNode::getCoefficients()
+{
+    return getCoefficients(mCurrentFormat.getDecompositionLevels());
 }
 
 }

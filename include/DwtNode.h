@@ -29,17 +29,20 @@ public:
     virtual ~DwtNode() { /* no-op */ }
 
 protected:
-    void                        initialize() override;
+    void                            initialize() override;
 
 public:
-    const std::vector<float>&   getCoefficients();
+    //! Returns detail coefficients at lvl specified
+    const std::vector<float>&       getCoefficients(int lvl);
+    //! Returns detail coefficients at max decomposition lvl
+    const std::vector<float>&       getCoefficients();
 
 private:
     struct Data;
-    std::shared_ptr<Data>       mWavelibData;
-    ci::audio::BufferT<double>  mSamplesBuffer;
-    std::vector<float>		    mCoefficients;
-    Format                      mCurrentFormat;
+    std::shared_ptr<Data>           mWavelibData;
+    ci::audio::BufferT<double>      mSamplesBuffer;
+    std::vector<std::vector<float>> mDetailCoefficients;
+    const Format                    mCurrentFormat;
 };
 
 }
