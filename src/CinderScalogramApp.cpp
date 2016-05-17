@@ -26,7 +26,6 @@ private:
     SpectrumPlot				mDftPlot;
     WaveletDecompositionPlot    mDwtPlot;
     gl::FboRef                  mPausedScreen;
-    float                       mDrawMargin = 40.0f;
     int                         mSampleSize = 512;
     bool                        mPaused     = false;
 };
