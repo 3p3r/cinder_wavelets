@@ -24,7 +24,7 @@ private:
     wavy::DftNodeRef	        mDftNode;
     wavy::DwtNodeRef	        mDwtNode;
     SpectrumPlot				mDftPlot;
-    SpectrumPlot				mDwtPlot;
+    WaveletDecompositionPlot    mDwtPlot;
     float                       mDrawMargin = 40.0f;
     int                         mSampleSize = 512;
 };
@@ -59,6 +59,8 @@ void CinderScalogramApp::setup()
 
     mInputDeviceNode->enable();
     ctx->enable();
+
+    mDwtPlot = WaveletDecompositionPlot(mDwtNode);
 }
 
 void CinderScalogramApp::resize()
@@ -71,8 +73,8 @@ void CinderScalogramApp::draw()
 {
     gl::clear(Color::black());
 
-    mDwtPlot.draw(mDwtNode->getCoefficients());
     mDftPlot.draw(mDftNode->getMagSpectrum());
+    mDwtPlot.draw();
 }
 
 CINDER_APP(CinderScalogramApp, RendererGl)
