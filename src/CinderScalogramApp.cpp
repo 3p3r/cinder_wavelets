@@ -17,6 +17,7 @@ public:
     void                        setup() override;
     void                        draw() override;
     void                        resize() override;
+    void                        keyDown( KeyEvent event ) override;
 
 private:
     audio::InputDeviceNodeRef	mInputDeviceNode;
@@ -25,8 +26,10 @@ private:
     wavy::DwtNodeRef	        mDwtNode;
     SpectrumPlot				mDftPlot;
     WaveletDecompositionPlot    mDwtPlot;
+    gl::FboRef                  mPausedScreen;
     float                       mDrawMargin = 40.0f;
     int                         mSampleSize = 512;
+    bool                        mPaused     = false;
 };
 
 void CinderScalogramApp::setup()
@@ -65,16 +68,40 @@ void CinderScalogramApp::setup()
 
 void CinderScalogramApp::resize()
 {
-    mDftPlot.setBounds(Rectf(mDrawMargin, mDrawMargin, getWindowWidth() - mDrawMargin, (getWindowHeight() - mDrawMargin) * 0.5f));
-    mDwtPlot.setBounds(Rectf(mDrawMargin, (getWindowHeight() + mDrawMargin) * 0.5f, getWindowWidth() - mDrawMargin, getWindowHeight() - mDrawMargin));
+    float draw_margin_w = 0.04f * getWindowWidth();
+    float draw_margin_h = 0.04f * getWindowHeight();
+
+    mDftPlot.setBounds(Rectf(draw_margin_w, draw_margin_h, getWindowWidth() - draw_margin_w, (getWindowHeight() - draw_margin_h) * 0.5f));
+    mDwtPlot.setBounds(Rectf(draw_margin_w, (getWindowHeight() + draw_margin_h) * 0.5f, getWindowWidth() - draw_margin_w, getWindowHeight() - draw_margin_h));
+}
+
+void CinderScalogramApp::keyDown(KeyEvent event)
+{
+    if (event.getCode() == event.KEY_ESCAPE)
+        quit();
+    else if (event.getCode() == event.KEY_p)
+        mPaused = !mPaused;
+
+    if (mPaused)
+    {
+        mPausedScreen = gl::Fbo::create(getWindowWidth(), getWindowHeight());
+        mPausedScreen->blitFromScreen(getWindowBounds(), mPausedScreen->getBounds());
+    }
 }
 
 void CinderScalogramApp::draw()
 {
     gl::clear(Color::black());
 
-    mDftPlot.draw(mDftNode->getMagSpectrum());
-    mDwtPlot.draw();
+    if (mPaused && mPausedScreen)
+    {
+        mPausedScreen->blitToScreen(mPausedScreen->getBounds(), getWindowBounds());
+    }
+    else
+    {
+        mDftPlot.draw(mDftNode->getMagSpectrum());
+        mDwtPlot.draw();
+    }
 }
 
 CINDER_APP(CinderScalogramApp, RendererGl)
