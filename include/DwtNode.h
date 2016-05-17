@@ -36,6 +36,8 @@ public:
     const std::vector<float>&       getCoefficients(int lvl);
     //! Returns detail coefficients at max decomposition lvl
     const std::vector<float>&       getCoefficients();
+    //! Gets current format of this node
+    const Format&                   getFormat() const { return mCurrentFormat; }
 
 private:
     struct Data;
