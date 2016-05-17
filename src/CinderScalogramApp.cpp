@@ -15,44 +15,41 @@ using namespace std;
 class CinderScalogramApp : public App {
 public:
     void                        setup() override;
-    void                        update() override;
     void                        draw() override;
     void                        resize() override;
-    void                        keyDown(KeyEvent event) override;
 
 private:
     audio::InputDeviceNodeRef	mInputDeviceNode;
     audio::MonitorNodeRef       mMonitorNode;
     wavy::DftNodeRef	        mDftNode;
     wavy::DwtNodeRef	        mDwtNode;
-    WaveformPlot                mWaveForm;
     SpectrumPlot				mDftPlot;
     SpectrumPlot				mDwtPlot;
-    bool                        mDrawWaveForm = false;
+    float                       mDrawMargin = 40.0f;
+    int                         mSampleSize = 512;
 };
 
 void CinderScalogramApp::setup()
 {
     auto ctx = audio::Context::master();
-    auto sample_size = 512;
 
     mInputDeviceNode = ctx->createInputDeviceNode();
 
     auto dftFormat = wavy::DftNode::Format()
-        .fftSize(sample_size * 2)
-        .windowSize(sample_size);
+        .fftSize(mSampleSize * 2)
+        .windowSize(mSampleSize);
 
     mDftNode = ctx->makeNode(new wavy::DftNode(dftFormat));
 
     auto dwtFormat = wavy::DwtNode::Format()
         .decompositionLevels(5)
         .motherWavelet(dsp::MotherWavelet::Daubechies5)
-        .windowSize(sample_size);
+        .windowSize(mSampleSize);
 
     mDwtNode = ctx->makeNode(new wavy::DwtNode(dwtFormat));
 
     auto monitorFormat = audio::MonitorNode::Format()
-        .windowSize(sample_size);
+        .windowSize(mSampleSize);
 
     mMonitorNode = ctx->makeNode(new audio::MonitorNode(monitorFormat));
 
@@ -64,23 +61,10 @@ void CinderScalogramApp::setup()
     ctx->enable();
 }
 
-void CinderScalogramApp::update()
-{
-    if (mDrawWaveForm)
-        mWaveForm.load(mMonitorNode->getBuffer(), getWindowBounds());
-}
-
 void CinderScalogramApp::resize()
 {
-    auto margin = 40.0f;
-    mDftPlot.setBounds(Rectf(margin, margin, getWindowWidth() - margin, (getWindowHeight() - margin) * 0.5f));
-    mDwtPlot.setBounds(Rectf(margin, (getWindowHeight() + margin) * 0.5f, getWindowWidth() - margin, getWindowHeight() - margin));
-}
-
-void CinderScalogramApp::keyDown(KeyEvent event)
-{
-    if (event.getChar() == 'w' || event.getChar() == 'W')
-        mDrawWaveForm = !mDrawWaveForm;
+    mDftPlot.setBounds(Rectf(mDrawMargin, mDrawMargin, getWindowWidth() - mDrawMargin, (getWindowHeight() - mDrawMargin) * 0.5f));
+    mDwtPlot.setBounds(Rectf(mDrawMargin, (getWindowHeight() + mDrawMargin) * 0.5f, getWindowWidth() - mDrawMargin, getWindowHeight() - mDrawMargin));
 }
 
 void CinderScalogramApp::draw()
@@ -89,9 +73,6 @@ void CinderScalogramApp::draw()
 
     mDwtPlot.draw(mDwtNode->getCoefficients());
     mDftPlot.draw(mDftNode->getMagSpectrum());
-    
-    if (mDrawWaveForm)
-        mWaveForm.draw();
 }
 
 CINDER_APP(CinderScalogramApp, RendererGl)
