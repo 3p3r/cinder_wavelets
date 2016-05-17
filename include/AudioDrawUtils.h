@@ -30,6 +30,7 @@
 #include "cinder/PolyLine.h"
 #include "cinder/gl/VboMesh.h"
 #include "cinder/gl/Texture.h"
+#include "cinder/gl/TextureFont.h"
 
 #include <vector>
 
@@ -112,6 +113,9 @@ public:
     void setBorderColor(const ci::ColorA &color)    { mBorderColor = color; }
     const ci::ColorA& getBorderColor() const        { return mBorderColor; }
 
+    void enableDrawLabels(bool on = true)   { mDrawLabels = on; }
+    bool getDrawLabelsEnabled() const       { return mDrawLabels; }
+
     void draw();
 
 private:
@@ -125,4 +129,6 @@ private:
     wavy::DwtNodeRef                mNode;
     std::vector<ci::Surface32f>     mSurfaces;
     std::vector<ci::gl::TextureRef> mTextures;
+    ci::gl::TextureFontRef		    mTextureFont;
+    bool                            mDrawLabels;
 };

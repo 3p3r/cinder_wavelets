@@ -316,7 +316,7 @@ const std::array<const ci::Color, 64> matlab_jet_palette
 }
 
 WaveletDecompositionPlot::WaveletDecompositionPlot(wavy::DwtNodeRef node)
-    : mNode(node), mBorderColor(0.5f, 0.5f, 0.5f, 1)
+    : mNode(node), mBorderColor(0.5f, 0.5f, 0.5f, 1), mDrawLabels(true)
 {}
 
 void WaveletDecompositionPlot::draw()
@@ -369,12 +369,28 @@ void WaveletDecompositionPlot::renderSurfaces()
     auto draw_height = mBounds.getHeight() / mTextures.size();
     auto draw_uppery = mBounds.getUpperLeft().y;
 
+    if (mDrawLabels && !mTextureFont)
+        mTextureFont = gl::TextureFont::create(Font(Font::getDefault().getName(), 16));
+
     for (std::size_t index = 0; index < mTextures.size(); ++index)
     {
         gl::draw(mTextures[index], ci::Rectf(mBounds.getUpperLeft().x, draw_uppery, mBounds.getUpperRight().x, draw_uppery + draw_height));
+
+        if (mDrawLabels && mTextureFont)
+        {
+            std::string levelLabel = std::to_string(index + 1);
+            mTextureFont->drawString(levelLabel, vec2(mBounds.getUpperLeft().x - mTextureFont->getFont().getSize() * 1.2f, draw_uppery + draw_height * 0.5f));
+        }
+
         draw_uppery += draw_height;
     }
 
     gl::color(mBorderColor);
     gl::drawStrokedRect(mBounds);
+
+    if (mDrawLabels && mTextureFont)
+    {
+        std::string waveletLabel = "Wavelet decompositions (level vs. time)";
+        mTextureFont->drawString(waveletLabel, vec2((mBounds.getLowerLeft().x + mBounds.getWidth()  *0.5f) - mTextureFont->measureString(waveletLabel).x / 2, mBounds.getLowerLeft().y + mTextureFont->getFont().getSize() * 1.2f));
+    }
 }
