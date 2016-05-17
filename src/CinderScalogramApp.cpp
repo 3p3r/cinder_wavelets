@@ -21,7 +21,6 @@ public:
 
 private:
     audio::InputDeviceNodeRef	mInputDeviceNode;
-    audio::MonitorNodeRef       mMonitorNode;
     wavy::DftNodeRef	        mDftNode;
     wavy::DwtNodeRef	        mDwtNode;
     SpectrumPlot				mDftPlot;
@@ -54,11 +53,8 @@ void CinderScalogramApp::setup()
     auto monitorFormat = audio::MonitorNode::Format()
         .windowSize(mSampleSize);
 
-    mMonitorNode = ctx->makeNode(new audio::MonitorNode(monitorFormat));
-
     mInputDeviceNode >> mDftNode;
     mInputDeviceNode >> mDwtNode;
-    mInputDeviceNode >> mMonitorNode;
 
     mInputDeviceNode->enable();
     ctx->enable();
