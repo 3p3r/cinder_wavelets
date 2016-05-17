@@ -59,6 +59,9 @@ void CinderScalogramApp::setup()
     ctx->enable();
 
     mDwtPlot = WaveletDecompositionPlot(mDwtNode);
+
+    std::string title = dsp::WavelettoString(dwtFormat.getMotherWavelet()) + " wavelet decompositions vs. FFT bins";
+    getWindow()->setTitle(title);
 }
 
 void CinderScalogramApp::resize()
