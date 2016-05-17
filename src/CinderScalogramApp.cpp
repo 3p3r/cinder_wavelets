@@ -68,8 +68,9 @@ void CinderScalogramApp::setup()
 
 void CinderScalogramApp::resize()
 {
-    float draw_margin_w = 0.04f * getWindowWidth();
-    float draw_margin_h = 0.04f * getWindowHeight();
+    float margin_percent = 0.07f;
+    float draw_margin_w = margin_percent * getWindowWidth();
+    float draw_margin_h = margin_percent * getWindowHeight();
 
     mDftPlot.setBounds(Rectf(draw_margin_w, draw_margin_h, getWindowWidth() - draw_margin_w, (getWindowHeight() - draw_margin_h) * 0.5f));
     mDwtPlot.setBounds(Rectf(draw_margin_w, (getWindowHeight() + draw_margin_h) * 0.5f, getWindowWidth() - draw_margin_w, getWindowHeight() - draw_margin_h));
