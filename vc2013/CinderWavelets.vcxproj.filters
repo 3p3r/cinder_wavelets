@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\CinderScalogramApp.cpp">
+    <ClCompile Include="..\src\CinderWaveletsApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\CinderScalogramApp.cpp">
+    <ClCompile Include="..\src\CinderWaveletsApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClInclude Include="..\include\Resources.h">

@@ -12,7 +12,7 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-class CinderScalogramApp : public App {
+class CinderWaveletsApp : public App {
 public:
     void                        setup() override;
     void                        draw() override;
@@ -30,7 +30,7 @@ private:
     bool                        mPaused     = false;
 };
 
-void CinderScalogramApp::setup()
+void CinderWaveletsApp::setup()
 {
     auto ctx = audio::Context::master();
 
@@ -64,7 +64,7 @@ void CinderScalogramApp::setup()
     getWindow()->setTitle(title);
 }
 
-void CinderScalogramApp::resize()
+void CinderWaveletsApp::resize()
 {
     float margin_percent = 0.07f;
     float draw_margin_w = margin_percent * getWindowWidth();
@@ -74,7 +74,7 @@ void CinderScalogramApp::resize()
     mDwtPlot.setBounds(Rectf(draw_margin_w, (getWindowHeight() + draw_margin_h) * 0.5f, getWindowWidth() - draw_margin_w, getWindowHeight() - draw_margin_h));
 }
 
-void CinderScalogramApp::keyDown(KeyEvent event)
+void CinderWaveletsApp::keyDown(KeyEvent event)
 {
     if (event.getCode() == event.KEY_ESCAPE)
         quit();
@@ -88,7 +88,7 @@ void CinderScalogramApp::keyDown(KeyEvent event)
     }
 }
 
-void CinderScalogramApp::draw()
+void CinderWaveletsApp::draw()
 {
     gl::clear(Color::black());
 
@@ -103,4 +103,4 @@ void CinderScalogramApp::draw()
     }
 }
 
-CINDER_APP(CinderScalogramApp, RendererGl)
+CINDER_APP(CinderWaveletsApp, RendererGl)
