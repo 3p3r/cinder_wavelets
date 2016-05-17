@@ -24,6 +24,7 @@
 #include "AudioDrawUtils.h"
 
 #include "cinder/audio/Utilities.h"
+#include "cinder/audio/Context.h"
 #include "cinder/CinderMath.h"
 #include "cinder/Triangulate.h"
 #include "cinder/gl/gl.h"
@@ -184,7 +185,7 @@ void WaveformPlot::draw()
 // ----------------------------------------------------------------------------------------------------
 
 SpectrumPlot::SpectrumPlot()
-	: mScaleDecibels( true ), mBorderEnabled( true ), mBorderColor( 0.5f, 0.5f, 0.5f, 1 )
+    : mScaleDecibels(true), mBorderEnabled(true), mBorderColor(0.5f, 0.5f, 0.5f, 1), mDrawLabels(true)
 {
 }
 
@@ -237,6 +238,16 @@ void SpectrumPlot::draw( const vector<float> &magSpectrum )
 		gl::color( mBorderColor );
 		gl::drawStrokedRect( mBounds );
 	}
+
+    if (mDrawLabels && !mTextureFont)
+        mTextureFont = gl::TextureFont::create(Font(Font::getDefault().getName(), 16));
+
+    if (mDrawLabels && mTextureFont)
+    {
+        auto max_freq = audio::Context::master()->deviceManager()->getDefaultInput()->getSampleRate() / 2;
+        std::string fftLabel = "FFT bins 0 - " + std::to_string(max_freq) + "Hz. (intensity vs. frequency)";
+        mTextureFont->drawString(fftLabel, vec2((mBounds.getLowerLeft().x + mBounds.getWidth()  *0.5f) - mTextureFont->measureString(fftLabel).x / 2, mBounds.getLowerLeft().y + mTextureFont->getFont().getSize() * 1.2f));
+    }
 }
 
 // ----------------------------------------------------------------------------------------------------

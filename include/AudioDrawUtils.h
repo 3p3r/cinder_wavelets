@@ -98,6 +98,8 @@ private:
     ci::Rectf				mBounds;
     bool					mScaleDecibels, mBorderEnabled;
     ci::ColorA				mBorderColor;
+    ci::gl::TextureFontRef	mTextureFont;
+    bool                    mDrawLabels;
 };
 
 namespace wavy { using DwtNodeRef = std::shared_ptr < class DwtNode > ; }
