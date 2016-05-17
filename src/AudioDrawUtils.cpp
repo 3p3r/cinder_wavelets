@@ -24,12 +24,13 @@
 #include "AudioDrawUtils.h"
 
 #include "cinder/audio/Utilities.h"
-
 #include "cinder/CinderMath.h"
 #include "cinder/Triangulate.h"
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Batch.h"
 #include "cinder/gl/Shader.h"
+
+#include "DwtNode.h"
 
 using namespace std;
 using namespace ci;
@@ -236,4 +237,144 @@ void SpectrumPlot::draw( const vector<float> &magSpectrum )
 		gl::color( mBorderColor );
 		gl::drawStrokedRect( mBounds );
 	}
+}
+
+// ----------------------------------------------------------------------------------------------------
+// MARK: - WaveletDecompositionPlot
+// ----------------------------------------------------------------------------------------------------
+
+namespace {
+
+const std::array<const ci::Color, 64> matlab_jet_palette
+{{
+	ci::Color(0.0000f, 0.0000f, 0.56078f),
+	ci::Color(0.0000f, 0.0000f, 0.62353f),
+	ci::Color(0.0000f, 0.0000f, 0.68627f),
+	ci::Color(0.0000f, 0.0000f, 0.74902f),
+	ci::Color(0.0000f, 0.0000f, 0.81176f),
+	ci::Color(0.0000f, 0.0000f, 0.87451f),
+	ci::Color(0.0000f, 0.0000f, 0.93725f),
+	ci::Color(0.0000f, 0.0000f, 1.0000f),
+	ci::Color(0.0000f, 0.058824f, 1.0000f),
+	ci::Color(0.0000f, 0.12157f, 1.0000f),
+	ci::Color(0.0000f, 0.18431f, 1.0000f),
+	ci::Color(0.0000f, 0.24706f, 1.0000f),
+	ci::Color(0.0000f, 0.30980f, 1.0000f),
+	ci::Color(0.0000f, 0.37255f, 1.0000f),
+	ci::Color(0.0000f, 0.43529f, 1.0000f),
+	ci::Color(0.0000f, 0.49804f, 1.0000f),
+	ci::Color(0.0000f, 0.56078f, 1.0000f),
+	ci::Color(0.0000f, 0.62353f, 1.0000f),
+	ci::Color(0.0000f, 0.68627f, 1.0000f),
+	ci::Color(0.0000f, 0.74902f, 1.0000f),
+	ci::Color(0.0000f, 0.81176f, 1.0000f),
+	ci::Color(0.0000f, 0.87451f, 1.0000f),
+	ci::Color(0.0000f, 0.93725f, 1.0000f),
+	ci::Color(0.0000f, 1.0000f, 1.0000f),
+	ci::Color(0.058824f, 1.0000f, 0.93725f),
+	ci::Color(0.12157f, 1.0000f, 0.87451f),
+	ci::Color(0.18431f, 1.0000f, 0.81176f),
+	ci::Color(0.24706f, 1.0000f, 0.74902f),
+	ci::Color(0.30980f, 1.0000f, 0.68627f),
+	ci::Color(0.37255f, 1.0000f, 0.62353f),
+	ci::Color(0.43529f, 1.0000f, 0.56078f),
+	ci::Color(0.49804f, 1.0000f, 0.49804f),
+	ci::Color(0.56078f, 1.0000f, 0.43529f),
+	ci::Color(0.62353f, 1.0000f, 0.37255f),
+	ci::Color(0.68627f, 1.0000f, 0.30980f),
+	ci::Color(0.74902f, 1.0000f, 0.24706f),
+	ci::Color(0.81176f, 1.0000f, 0.18431f),
+	ci::Color(0.87451f, 1.0000f, 0.12157f),
+	ci::Color(0.93725f, 1.0000f, 0.058824f),
+	ci::Color(1.0000f, 1.0000f, 0.0000f),
+	ci::Color(1.0000f, 0.93725f, 0.0000f),
+	ci::Color(1.0000f, 0.87451f, 0.0000f),
+	ci::Color(1.0000f, 0.81176f, 0.0000f),
+	ci::Color(1.0000f, 0.74902f, 0.0000f),
+	ci::Color(1.0000f, 0.68627f, 0.0000f),
+	ci::Color(1.0000f, 0.62353f, 0.0000f),
+	ci::Color(1.0000f, 0.56078f, 0.0000f),
+	ci::Color(1.0000f, 0.49804f, 0.0000f),
+	ci::Color(1.0000f, 0.43529f, 0.0000f),
+	ci::Color(1.0000f, 0.37255f, 0.0000f),
+	ci::Color(1.0000f, 0.30980f, 0.0000f),
+	ci::Color(1.0000f, 0.24706f, 0.0000f),
+	ci::Color(1.0000f, 0.18431f, 0.0000f),
+	ci::Color(1.0000f, 0.12157f, 0.0000f),
+	ci::Color(1.0000f, 0.058824f, 0.0000f),
+	ci::Color(1.0000f, 0.0000f, 0.0000f),
+	ci::Color(0.93725f, 0.0000f, 0.0000f),
+	ci::Color(0.87451f, 0.0000f, 0.0000f),
+	ci::Color(0.81176f, 0.0000f, 0.0000f),
+	ci::Color(0.74902f, 0.0000f, 0.0000f),
+	ci::Color(0.68627f, 0.0000f, 0.0000f),
+	ci::Color(0.62353f, 0.0000f, 0.0000f),
+	ci::Color(0.56078f, 0.0000f, 0.0000f),
+	ci::Color(0.49804f, 0.0000f, 0.0000f)
+}};
+
+}
+
+WaveletDecompositionPlot::WaveletDecompositionPlot(wavy::DwtNodeRef node)
+    : mNode(node), mBorderColor(0.5f, 0.5f, 0.5f, 1)
+{}
+
+void WaveletDecompositionPlot::draw()
+{
+    if (!mNode)
+        return;
+
+    if (mSurfaces.size() != mNode->getFormat().getDecompositionLevels())
+        createSurfaces();
+
+    updateSurfaces();
+    renderSurfaces();
+}
+
+void WaveletDecompositionPlot::createSurfaces()
+{
+    if (!mSurfaces.empty())
+        mSurfaces.clear();
+    
+    if (!mTextures.empty())
+        mTextures.clear();
+
+    gl::Texture::Format tex_fmt;
+    tex_fmt.magFilter(GL_NEAREST);
+
+    for (std::size_t index = 0; index < mNode->getFormat().getDecompositionLevels(); ++index)
+    {
+        mSurfaces.push_back(ci::Surface32f(mNode->getCoefficients(index + 1).size(), 1, false));
+        mTextures.push_back(gl::Texture::create(mSurfaces.back(), tex_fmt));
+    }
+}
+
+void WaveletDecompositionPlot::updateSurfaces()
+{
+    for (std::size_t index = 0; index < mSurfaces.size(); ++index)
+    {
+        for (int coeff = 0; coeff < mSurfaces[index].getWidth(); ++coeff)
+        {
+            auto m = ci::math<float>::clamp(audio::linearToDecibel(mNode->getCoefficients(index + 1)[coeff]) / 100.0f);
+            auto c = matlab_jet_palette[ci::math<int>::clamp(static_cast<int>(m * matlab_jet_palette.size()), 0, matlab_jet_palette.size())];
+            mSurfaces[index].setPixel(ivec2(coeff, 0), c);
+        }
+
+        mTextures[index]->update(mSurfaces[index]);
+    }
+}
+
+void WaveletDecompositionPlot::renderSurfaces()
+{
+    auto draw_height = mBounds.getHeight() / mTextures.size();
+    auto draw_uppery = mBounds.getUpperLeft().y;
+
+    for (std::size_t index = 0; index < mTextures.size(); ++index)
+    {
+        gl::draw(mTextures[index], ci::Rectf(mBounds.getUpperLeft().x, draw_uppery, mBounds.getUpperRight().x, draw_uppery + draw_height));
+        draw_uppery += draw_height;
+    }
+
+    gl::color(mBorderColor);
+    gl::drawStrokedRect(mBounds);
 }
