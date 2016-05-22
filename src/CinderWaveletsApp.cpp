@@ -99,6 +99,13 @@ void CinderWaveletsApp::keyDown(KeyEvent event)
         mPaused = !mPaused;
     else if (event.getCode() == event.KEY_f)
         setFullScreen(!isFullScreen());
+    else if (event.getCode() == event.KEY_d)
+    {
+        mDftPlot.enableScaleDecibels(!mDftPlot.getScaleDecibels());
+        mDwtPlot1.enableScaleDecibels(!mDwtPlot1.getScaleDecibels());
+        mDwtPlot2.enableScaleDecibels(!mDwtPlot2.getScaleDecibels());
+        mDwtPlot3.enableScaleDecibels(!mDwtPlot3.getScaleDecibels());
+    }
 
     if (mPaused)
     {

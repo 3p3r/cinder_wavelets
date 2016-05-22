@@ -118,6 +118,9 @@ public:
     void enableDrawLabels(bool on = true)   { mDrawLabels = on; }
     bool getDrawLabelsEnabled() const       { return mDrawLabels; }
 
+    void enableScaleDecibels(bool b = true) { mScaleDecibels = b; }
+    bool getScaleDecibels() const           { return mScaleDecibels; }
+
     void draw();
 
 private:
@@ -132,5 +135,6 @@ private:
     std::vector<ci::Surface32f>     mSurfaces;
     std::vector<ci::gl::TextureRef> mTextures;
     ci::gl::TextureFontRef		    mTextureFont;
+    bool                            mScaleDecibels;
     bool                            mDrawLabels;
 };

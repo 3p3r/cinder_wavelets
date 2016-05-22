@@ -254,80 +254,8 @@ void SpectrumPlot::draw( const vector<float> &magSpectrum )
 // MARK: - WaveletDecompositionPlot
 // ----------------------------------------------------------------------------------------------------
 
-namespace {
-
-const std::array<const ci::Color, 64> matlab_jet_palette
-{{
-	ci::Color(0.0000f, 0.0000f, 0.56078f),
-	ci::Color(0.0000f, 0.0000f, 0.62353f),
-	ci::Color(0.0000f, 0.0000f, 0.68627f),
-	ci::Color(0.0000f, 0.0000f, 0.74902f),
-	ci::Color(0.0000f, 0.0000f, 0.81176f),
-	ci::Color(0.0000f, 0.0000f, 0.87451f),
-	ci::Color(0.0000f, 0.0000f, 0.93725f),
-	ci::Color(0.0000f, 0.0000f, 1.0000f),
-	ci::Color(0.0000f, 0.058824f, 1.0000f),
-	ci::Color(0.0000f, 0.12157f, 1.0000f),
-	ci::Color(0.0000f, 0.18431f, 1.0000f),
-	ci::Color(0.0000f, 0.24706f, 1.0000f),
-	ci::Color(0.0000f, 0.30980f, 1.0000f),
-	ci::Color(0.0000f, 0.37255f, 1.0000f),
-	ci::Color(0.0000f, 0.43529f, 1.0000f),
-	ci::Color(0.0000f, 0.49804f, 1.0000f),
-	ci::Color(0.0000f, 0.56078f, 1.0000f),
-	ci::Color(0.0000f, 0.62353f, 1.0000f),
-	ci::Color(0.0000f, 0.68627f, 1.0000f),
-	ci::Color(0.0000f, 0.74902f, 1.0000f),
-	ci::Color(0.0000f, 0.81176f, 1.0000f),
-	ci::Color(0.0000f, 0.87451f, 1.0000f),
-	ci::Color(0.0000f, 0.93725f, 1.0000f),
-	ci::Color(0.0000f, 1.0000f, 1.0000f),
-	ci::Color(0.058824f, 1.0000f, 0.93725f),
-	ci::Color(0.12157f, 1.0000f, 0.87451f),
-	ci::Color(0.18431f, 1.0000f, 0.81176f),
-	ci::Color(0.24706f, 1.0000f, 0.74902f),
-	ci::Color(0.30980f, 1.0000f, 0.68627f),
-	ci::Color(0.37255f, 1.0000f, 0.62353f),
-	ci::Color(0.43529f, 1.0000f, 0.56078f),
-	ci::Color(0.49804f, 1.0000f, 0.49804f),
-	ci::Color(0.56078f, 1.0000f, 0.43529f),
-	ci::Color(0.62353f, 1.0000f, 0.37255f),
-	ci::Color(0.68627f, 1.0000f, 0.30980f),
-	ci::Color(0.74902f, 1.0000f, 0.24706f),
-	ci::Color(0.81176f, 1.0000f, 0.18431f),
-	ci::Color(0.87451f, 1.0000f, 0.12157f),
-	ci::Color(0.93725f, 1.0000f, 0.058824f),
-	ci::Color(1.0000f, 1.0000f, 0.0000f),
-	ci::Color(1.0000f, 0.93725f, 0.0000f),
-	ci::Color(1.0000f, 0.87451f, 0.0000f),
-	ci::Color(1.0000f, 0.81176f, 0.0000f),
-	ci::Color(1.0000f, 0.74902f, 0.0000f),
-	ci::Color(1.0000f, 0.68627f, 0.0000f),
-	ci::Color(1.0000f, 0.62353f, 0.0000f),
-	ci::Color(1.0000f, 0.56078f, 0.0000f),
-	ci::Color(1.0000f, 0.49804f, 0.0000f),
-	ci::Color(1.0000f, 0.43529f, 0.0000f),
-	ci::Color(1.0000f, 0.37255f, 0.0000f),
-	ci::Color(1.0000f, 0.30980f, 0.0000f),
-	ci::Color(1.0000f, 0.24706f, 0.0000f),
-	ci::Color(1.0000f, 0.18431f, 0.0000f),
-	ci::Color(1.0000f, 0.12157f, 0.0000f),
-	ci::Color(1.0000f, 0.058824f, 0.0000f),
-	ci::Color(1.0000f, 0.0000f, 0.0000f),
-	ci::Color(0.93725f, 0.0000f, 0.0000f),
-	ci::Color(0.87451f, 0.0000f, 0.0000f),
-	ci::Color(0.81176f, 0.0000f, 0.0000f),
-	ci::Color(0.74902f, 0.0000f, 0.0000f),
-	ci::Color(0.68627f, 0.0000f, 0.0000f),
-	ci::Color(0.62353f, 0.0000f, 0.0000f),
-	ci::Color(0.56078f, 0.0000f, 0.0000f),
-	ci::Color(0.49804f, 0.0000f, 0.0000f)
-}};
-
-}
-
 WaveletDecompositionPlot::WaveletDecompositionPlot(wavy::DwtNodeRef node)
-    : mNode(node), mBorderColor(0.5f, 0.5f, 0.5f, 1), mDrawLabels(true)
+    : mNode(node), mBorderColor(0.5f, 0.5f, 0.5f, 1), mDrawLabels(true), mScaleDecibels(true)
 {}
 
 void WaveletDecompositionPlot::draw()
@@ -366,9 +294,14 @@ void WaveletDecompositionPlot::updateSurfaces()
     {
         for (int coeff = 0; coeff < mSurfaces[index].getWidth(); ++coeff)
         {
-            auto m = ci::math<float>::clamp(audio::linearToDecibel(mNode->getCoefficients(index + 1)[coeff]) / 100.0f);
-            auto c = matlab_jet_palette[ci::math<int>::clamp(static_cast<int>(m * matlab_jet_palette.size()), 0, matlab_jet_palette.size())];
-            mSurfaces[index].setPixel(ivec2(coeff, 0), c);
+            float m = mNode->getCoefficients(index + 1)[coeff];
+
+            if (getScaleDecibels())
+                m = ci::math<float>::clamp(audio::linearToDecibel(m) * 0.01f);
+            else
+                m = ci::math<float>::clamp(m);
+
+            mSurfaces[index].setPixel(ivec2(coeff, 0), ci::Color(m, m, m));
         }
 
         mTextures[index]->update(mSurfaces[index]);
