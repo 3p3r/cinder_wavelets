@@ -22,9 +22,13 @@ public:
 private:
     audio::InputDeviceNodeRef	mInputDeviceNode;
     wavy::DftNodeRef	        mDftNode;
-    wavy::DwtNodeRef	        mDwtNode;
+    wavy::DwtNodeRef	        mDwtNode1;
+    wavy::DwtNodeRef	        mDwtNode2;
+    wavy::DwtNodeRef	        mDwtNode3;
     SpectrumPlot				mDftPlot;
-    WaveletDecompositionPlot    mDwtPlot;
+    WaveletDecompositionPlot    mDwtPlot1;
+    WaveletDecompositionPlot    mDwtPlot2;
+    WaveletDecompositionPlot    mDwtPlot3;
     gl::FboRef                  mPausedScreen;
     int                         mSampleSize = 512;
     bool                        mPaused     = false;
@@ -44,21 +48,28 @@ void CinderWaveletsApp::setup()
 
     auto dwtFormat = wavy::DwtNode::Format()
         .decompositionLevels(5)
-        .motherWavelet(dsp::MotherWavelet::Daubechies5)
         .windowSize(mSampleSize);
 
-    mDwtNode = ctx->makeNode(new wavy::DwtNode(dwtFormat));
+    dwtFormat.motherWavelet(dsp::MotherWavelet::Haar);
+    mDwtNode1 = ctx->makeNode(new wavy::DwtNode(dwtFormat));
 
-    auto monitorFormat = audio::MonitorNode::Format()
-        .windowSize(mSampleSize);
+    dwtFormat.motherWavelet(dsp::MotherWavelet::Daubechies5);
+    mDwtNode2 = ctx->makeNode(new wavy::DwtNode(dwtFormat));
+
+    dwtFormat.motherWavelet(dsp::MotherWavelet::Bior1_5);
+    mDwtNode3 = ctx->makeNode(new wavy::DwtNode(dwtFormat));
 
     mInputDeviceNode >> mDftNode;
-    mInputDeviceNode >> mDwtNode;
+    mInputDeviceNode >> mDwtNode1;
+    mInputDeviceNode >> mDwtNode2;
+    mInputDeviceNode >> mDwtNode3;
 
     mInputDeviceNode->enable();
     ctx->enable();
 
-    mDwtPlot = WaveletDecompositionPlot(mDwtNode);
+    mDwtPlot1 = WaveletDecompositionPlot(mDwtNode1);
+    mDwtPlot2 = WaveletDecompositionPlot(mDwtNode2);
+    mDwtPlot3 = WaveletDecompositionPlot(mDwtNode3);
 
     std::string title = dsp::WavelettoString(dwtFormat.getMotherWavelet()) + " wavelet decompositions vs. FFT bins";
     getWindow()->setTitle(title);
@@ -66,12 +77,18 @@ void CinderWaveletsApp::setup()
 
 void CinderWaveletsApp::resize()
 {
-    float margin_percent = 0.07f;
-    float draw_margin_w = margin_percent * getWindowWidth();
-    float draw_margin_h = margin_percent * getWindowHeight();
+    float margin_percent = 0.05f;
 
-    mDftPlot.setBounds(Rectf(draw_margin_w, draw_margin_h, getWindowWidth() - draw_margin_w, (getWindowHeight() - draw_margin_h) * 0.5f));
-    mDwtPlot.setBounds(Rectf(draw_margin_w, (getWindowHeight() + draw_margin_h) * 0.5f, getWindowWidth() - draw_margin_w, getWindowHeight() - draw_margin_h));
+    float margin_x = margin_percent * getWindowWidth();
+    float margin_y = margin_percent * getWindowHeight();
+
+    float plot_width = (getWindowWidth() - 3.0f * margin_x) * 0.5f;
+    float plot_height = (getWindowHeight() - 3.0f * margin_y) * 0.5f;
+
+    mDftPlot.setBounds(ci::Rectf(margin_x, margin_y, margin_x + plot_width, margin_y + plot_height));
+    mDwtPlot1.setBounds(ci::Rectf(2.0f * margin_x + plot_width, margin_y, 2.0f * (margin_x + plot_width), margin_y + plot_height));
+    mDwtPlot2.setBounds(ci::Rectf(margin_x, 2.0f * margin_y + plot_height, margin_x + plot_width, 2.0f * (margin_y + plot_height)));
+    mDwtPlot3.setBounds(ci::Rectf(2.0f * margin_x + plot_width, 2.0f * margin_y + plot_height, 2.0f * (margin_x + plot_width), 2.0f * (margin_y + plot_height)));
 }
 
 void CinderWaveletsApp::keyDown(KeyEvent event)
@@ -80,6 +97,8 @@ void CinderWaveletsApp::keyDown(KeyEvent event)
         quit();
     else if (event.getCode() == event.KEY_p)
         mPaused = !mPaused;
+    else if (event.getCode() == event.KEY_f)
+        setFullScreen(!isFullScreen());
 
     if (mPaused)
     {
@@ -99,7 +118,9 @@ void CinderWaveletsApp::draw()
     else
     {
         mDftPlot.draw(mDftNode->getMagSpectrum());
-        mDwtPlot.draw();
+        mDwtPlot1.draw();
+        mDwtPlot2.draw();
+        mDwtPlot3.draw();
     }
 }
 
