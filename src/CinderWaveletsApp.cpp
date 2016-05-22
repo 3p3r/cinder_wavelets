@@ -89,8 +89,7 @@ void CinderWaveletsApp::setup()
     mDwtPlot2.setPaletteShader(mPaletteShader);
     mDwtPlot3.setPaletteShader(mPaletteShader);
 
-    std::string title = dsp::WavelettoString(dwtFormat.getMotherWavelet()) + " wavelet decompositions vs. FFT bins";
-    getWindow()->setTitle(title);
+    getWindow()->setTitle("Wavelet decompositions vs. FFT bins");
 }
 
 void CinderWaveletsApp::resize()
