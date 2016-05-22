@@ -347,7 +347,16 @@ void WaveletDecompositionPlot::renderSurfaces()
 
     if (mDrawLabels && mTextureFont)
     {
-        std::string waveletLabel = WavelettoString(mNode->getFormat().getMotherWavelet()) + " wavelet decompositions (level vs. time)";
-        mTextureFont->drawString(waveletLabel, vec2((mBounds.getLowerLeft().x + mBounds.getWidth()  *0.5f) - mTextureFont->measureString(waveletLabel).x / 2, mBounds.getLowerLeft().y + mTextureFont->getFont().getSize() * 1.2f));
+        std::stringstream ss;
+        std::size_t precision = 6;
+
+        ss
+            << WavelettoString(mNode->getFormat().getMotherWavelet())
+            << " wavelet decompositions (level vs. time). Mean: "
+            << std::fixed << std::setprecision(precision) << mNode->getMean()
+            << " StdDev: "
+            << std::fixed << std::setprecision(precision) << mNode->getStdDeviation();
+
+        mTextureFont->drawString(ss.str(), vec2((mBounds.getLowerLeft().x + mBounds.getWidth()  *0.5f) - mTextureFont->measureString(ss.str()).x / 2, mBounds.getLowerLeft().y + mTextureFont->getFont().getSize() * 1.2f));
     }
 }
