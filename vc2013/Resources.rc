@@ -1,5 +1,5 @@
 #include "../include/Resources.h"
 
-1 ICON "..\\resources\\cinder.ico"
+1 ICON "..\\resources\\wavelets.ico"
 PALETTE_VERT_SHADER
 PALETTE_FRAG_SHADER
