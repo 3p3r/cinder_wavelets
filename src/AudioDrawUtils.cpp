@@ -294,12 +294,10 @@ void WaveletDecompositionPlot::updateSurfaces()
     {
         for (int coeff = 0; coeff < mSurfaces[index].getWidth(); ++coeff)
         {
-            float m = mNode->getCoefficients(index + 1)[coeff];
+            float m = ci::math<float>::clamp(mNode->getCoefficients(index + 1)[coeff]);
 
             if (getScaleDecibels())
-                m = ci::math<float>::clamp(audio::linearToDecibel(m) * 0.01f);
-            else
-                m = ci::math<float>::clamp(m);
+                m = audio::linearToDecibel(m) / 100.0f;
 
             mSurfaces[index].setPixel(ivec2(coeff, 0), ci::Color(m, m, m));
         }
