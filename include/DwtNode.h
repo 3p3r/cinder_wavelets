@@ -38,6 +38,10 @@ public:
     const std::vector<float>&       getCoefficients();
     //! Gets current format of this node
     const Format&                   getFormat() const { return mCurrentFormat; }
+    //! Returns mean of the last level of decomposition
+    float                           getMean() const;
+    //! Returns standard deviation of the last level of decomposition
+    float                           getStdDeviation() const;
 
 private:
     struct Data;
@@ -45,6 +49,7 @@ private:
     ci::audio::BufferT<double>      mSamplesBuffer;
     std::vector<std::vector<float>> mDetailCoefficients;
     const Format                    mCurrentFormat;
+    float                           mStdDev, mMean;
 };
 
 }

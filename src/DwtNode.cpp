@@ -2,6 +2,24 @@
 #include "wavelib.h"
 
 #include "cinder/CinderMath.h"
+#include <numeric>
+
+namespace {
+
+float calculateMean(const std::vector<float>& samples)
+{
+    return std::accumulate(samples.cbegin(), samples.cend(), 0.0f) / samples.size();
+}
+
+float calculateStdDev(const std::vector<float>& samples, float mean)
+{
+    std::vector<float> diff(samples.size());
+    std::transform(samples.cbegin(), samples.cend(), diff.begin(), [mean](float x) { return x - mean; });
+    float sq_sum = std::inner_product(diff.cbegin(), diff.cend(), diff.cbegin(), 0.0f);
+    return std::sqrt(sq_sum / samples.size());
+}
+
+}
 
 namespace {
 
@@ -63,6 +81,7 @@ struct DwtNode::Data
 DwtNode::DwtNode(const Format &format /*= Format()*/)
     : mCurrentFormat(format)
     , mWavelibData(std::make_unique<Data>(format))
+    , mStdDev(0), mMean(0)
 {}
 
 void DwtNode::initialize()
@@ -111,12 +130,25 @@ const std::vector<float>& DwtNode::getCoefficients(int lvl)
         }
     }
 
+    mMean = calculateMean(mDetailCoefficients.back());
+    mStdDev = calculateStdDev(mDetailCoefficients.back(), getMean());
+
     return mDetailCoefficients[ci::math<int>::clamp(lvl, 1, mCurrentFormat.getDecompositionLevels()) - 1];
 }
 
 const std::vector<float>& DwtNode::getCoefficients()
 {
     return getCoefficients(mCurrentFormat.getDecompositionLevels());
+}
+
+float DwtNode::getMean() const
+{
+    return mMean;
+}
+
+float DwtNode::getStdDeviation() const
+{
+    return mStdDev;
 }
 
 }
