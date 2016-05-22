@@ -318,7 +318,22 @@ void WaveletDecompositionPlot::renderSurfaces()
 
     for (std::size_t index = 0; index < mTextures.size(); ++index)
     {
-        gl::draw(mTextures[index], ci::Rectf(mBounds.getUpperLeft().x, draw_uppery, mBounds.getUpperRight().x, draw_uppery + draw_height));
+        if (mTextures[index])
+        {
+            auto bounds = ci::Rectf(mBounds.getUpperLeft().x, draw_uppery, mBounds.getUpperRight().x, draw_uppery + draw_height);
+
+            if (mPaletteShader)
+            {
+                gl::ScopedGlslProg      bind(mPaletteShader);
+                gl::ScopedTextureBind   texb(mTextures[index]);
+                mPaletteShader->uniform("uTex0", 0);
+                gl::drawSolidRect(bounds);
+            }
+            else
+            {
+                gl::draw(mTextures[index], bounds);
+            }
+        }
 
         if (mDrawLabels && mTextureFont)
         {

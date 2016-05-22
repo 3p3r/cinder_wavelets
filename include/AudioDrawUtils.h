@@ -115,6 +115,9 @@ public:
     void setBorderColor(const ci::ColorA &color)    { mBorderColor = color; }
     const ci::ColorA& getBorderColor() const        { return mBorderColor; }
 
+    void setPaletteShader(ci::gl::GlslProgRef shader)   { mPaletteShader = shader; }
+    ci::gl::GlslProgRef getPaletteShader() const        { return mPaletteShader; }
+
     void enableDrawLabels(bool on = true)   { mDrawLabels = on; }
     bool getDrawLabelsEnabled() const       { return mDrawLabels; }
 
@@ -135,6 +138,7 @@ private:
     std::vector<ci::Surface32f>     mSurfaces;
     std::vector<ci::gl::TextureRef> mTextures;
     ci::gl::TextureFontRef		    mTextureFont;
+    ci::gl::GlslProgRef             mPaletteShader;
     bool                            mScaleDecibels;
     bool                            mDrawLabels;
 };

@@ -6,6 +6,7 @@
 
 #include "DftNode.h"
 #include "DwtNode.h"
+#include "Resources.h"
 #include "AudioDrawUtils.h"
 
 using namespace ci;
@@ -30,12 +31,25 @@ private:
     WaveletDecompositionPlot    mDwtPlot2;
     WaveletDecompositionPlot    mDwtPlot3;
     gl::FboRef                  mPausedScreen;
+    gl::GlslProgRef             mPaletteShader;
     int                         mSampleSize = 512;
     bool                        mPaused     = false;
 };
 
 void CinderWaveletsApp::setup()
 {
+    try
+    {
+        mPaletteShader = gl::GlslProg::create(
+            ci::app::loadResource(PALETTE_VERT_SHADER),
+            ci::app::loadResource(PALETTE_FRAG_SHADER));
+    }
+    catch (const std::exception& ex)
+    {
+        std::cerr << "Shader load failed: " << ex.what() << std::endl;
+        mPaletteShader.reset();
+    }
+
     auto ctx = audio::Context::master();
 
     mInputDeviceNode = ctx->createInputDeviceNode();
@@ -70,6 +84,10 @@ void CinderWaveletsApp::setup()
     mDwtPlot1 = WaveletDecompositionPlot(mDwtNode1);
     mDwtPlot2 = WaveletDecompositionPlot(mDwtNode2);
     mDwtPlot3 = WaveletDecompositionPlot(mDwtNode3);
+
+    mDwtPlot1.setPaletteShader(mPaletteShader);
+    mDwtPlot2.setPaletteShader(mPaletteShader);
+    mDwtPlot3.setPaletteShader(mPaletteShader);
 
     std::string title = dsp::WavelettoString(dwtFormat.getMotherWavelet()) + " wavelet decompositions vs. FFT bins";
     getWindow()->setTitle(title);
